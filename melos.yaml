@@ -1,0 +1,9 @@
+name: drum_tuner_workspace
+sdkPath: G:\\tools\\flutter
+packages:
+  drum_tuner_app:
+    path: apps/drum_tuner_app
+  drum_tuning_plugin:
+    path: packages/drum_tuning_plugin
+  dsp-core:
+    path: packages/dsp-core
