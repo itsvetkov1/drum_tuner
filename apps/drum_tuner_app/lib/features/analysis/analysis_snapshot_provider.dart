@@ -5,7 +5,7 @@ import 'analysis_snapshot.dart';
 import 'providers.dart';
 
 class AnalysisSnapshotNotifier extends AutoDisposeNotifier<AnalysisSnapshot> {
-  static const int _historyWindow = 5;
+  static const int historyWindow = 5;
   static const double _confidenceThreshold = 0.65;
 
   @override
@@ -26,7 +26,7 @@ class AnalysisSnapshotNotifier extends AutoDisposeNotifier<AnalysisSnapshot> {
     final List<AnalysisResult> updatedHistory = List<AnalysisResult>.from(state.history);
     if (result.confidence >= _confidenceThreshold) {
       updatedHistory.add(result);
-      if (updatedHistory.length > _historyWindow) {
+      if (updatedHistory.length > historyWindow) {
         updatedHistory.removeAt(0);
       }
     }
