@@ -1,4 +1,4 @@
-name: drum_tuning_plugin
+﻿name: drum_tuning_plugin
 description: Flutter plugin bridging native audio capture and the DSP core.
 publish_to: 'none'
 version: 0.1.0
@@ -10,7 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   plugin_platform_interface: ^2.1.8
+  record: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -25,3 +28,6 @@ flutter:
         pluginClass: DrumTuningPlugin
       ios:
         pluginClass: DrumTuningPlugin
+      web:
+        pluginClass: DrumTuningWeb
+        fileName: src/web/drum_tuning_web.dart

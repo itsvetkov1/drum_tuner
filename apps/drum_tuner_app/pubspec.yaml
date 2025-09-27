@@ -13,6 +13,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
   drum_tuning_plugin:
     path: ../../packages/drum_tuning_plugin
+  record: ^6.1.1
 
 dev_dependencies:
   flutter_test:

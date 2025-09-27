@@ -5,7 +5,9 @@ import '../features/shell/shell_page.dart';
 import 'theme.dart';
 
 class DrumTunerApp extends ConsumerWidget {
-  const DrumTunerApp({super.key});
+  const DrumTunerApp({super.key, this.onGenerateRoute});
+
+  final RouteFactory? onGenerateRoute;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,6 +17,7 @@ class DrumTunerApp extends ConsumerWidget {
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
       themeMode: ThemeMode.dark,
+      onGenerateRoute: onGenerateRoute,
       home: const ShellPage(),
     );
   }

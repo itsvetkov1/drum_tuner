@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../analysis/analysis_snapshot_provider.dart';
+import '../../analysis/providers.dart';
+import 'pitch_mic_controller.dart';
 import 'pitch_state.dart';
 
 class PitchModeView extends ConsumerWidget {
@@ -10,6 +13,8 @@ class PitchModeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PitchUiState state = ref.watch(pitchUiStateProvider);
+    final PitchMicState micState = ref.watch(pitchMicControllerProvider);
+    final bool micEnabled = ref.watch(micCaptureEnabledProvider);
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -20,13 +25,76 @@ class PitchModeView extends ConsumerWidget {
             'Pitch Mode',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 24),
-          switch (state.stage) {
-            PitchStage.listening => const _PlaceholderCard(
-                message: 'Listening for strike...'),
-            PitchStage.coarse || PitchStage.refined => _PitchReadout(state: state),
-          },
+          if (kIsWeb) ...<Widget>[
+            const SizedBox(height: 16),
+            _MicPermissionSection(state: micState),
+            const SizedBox(height: 16),
+          ],
+          if (!micEnabled && kIsWeb)
+            const _PlaceholderCard(
+                message: 'Enable the microphone to start analysis.')
+          else
+            switch (state.stage) {
+              PitchStage.listening =>
+                const _PlaceholderCard(message: 'Listening for strike...'),
+              PitchStage.coarse ||
+              PitchStage.refined =>
+                _PitchReadout(state: state),
+            },
         ],
+      ),
+    );
+  }
+}
+
+class _MicPermissionSection extends ConsumerWidget {
+  const _MicPermissionSection({required this.state});
+
+  final PitchMicState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final PitchMicController controller =
+        ref.read(pitchMicControllerProvider.notifier);
+    final bool enabled = ref.watch(micCaptureEnabledProvider);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Microphone access',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.message ??
+                  (enabled
+                      ? 'Microphone ready. Strike a drum to capture pitch.'
+                      : 'Grant microphone access to analyze your drum.'),
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            if (!enabled)
+              ElevatedButton.icon(
+                onPressed: state.status == PitchMicStatus.requesting
+                    ? null
+                    : () => controller.enableMicrophone(),
+                icon: const Icon(Icons.mic),
+                label: Text(state.status == PitchMicStatus.requesting
+                    ? 'Requesting...'
+                    : 'Enable microphone'),
+              )
+            else if (state.status == PitchMicStatus.enabled)
+              Text(
+                'Listening…',
+                style: theme.textTheme.bodySmall,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -55,7 +123,8 @@ class _PitchReadout extends StatelessWidget {
               style: theme.textTheme.displaySmall,
             ),
             const SizedBox(height: 8),
-            Text('Note: ${state.noteName ?? '--'}', style: theme.textTheme.titleMedium),
+            Text('Note: ${state.noteName ?? '--'}',
+                style: theme.textTheme.titleMedium),
             Text(
               'Cents: ${state.cents != null ? _formatSigned(state.cents!, 1) : '--'}',
               style: theme.textTheme.titleMedium,
@@ -100,7 +169,11 @@ class _PlaceholderCard extends StatelessWidget {
 
 String _formatSigned(double value, int fractionDigits) {
   final String formatted = value.abs().toStringAsFixed(fractionDigits);
-  final String sign = value > 0 ? '+' : value < 0 ? '-' : '±';
+  final String sign = value > 0
+      ? '+'
+      : value < 0
+          ? '-'
+          : '±';
   if (sign == '±') {
     return '±$formatted';
   }

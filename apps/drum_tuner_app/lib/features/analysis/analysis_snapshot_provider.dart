@@ -10,7 +10,8 @@ class AnalysisSnapshotNotifier extends AutoDisposeNotifier<AnalysisSnapshot> {
 
   @override
   AnalysisSnapshot build() {
-    final ProviderSubscription<AsyncValue<AnalysisResult>> subscription = ref.listen(
+    final ProviderSubscription<AsyncValue<AnalysisResult>> subscription =
+        ref.listen(
       analysisStreamProvider,
       (AsyncValue<AnalysisResult>? previous, AsyncValue<AnalysisResult> next) {
         next.whenData(_handleEvent);
@@ -19,11 +20,18 @@ class AnalysisSnapshotNotifier extends AutoDisposeNotifier<AnalysisSnapshot> {
 
     ref.onDispose(subscription.close);
 
+    ref.listen<bool>(micCaptureEnabledProvider, (bool? _, bool next) {
+      if (!next) {
+        state = const AnalysisSnapshot();
+      }
+    });
+
     return const AnalysisSnapshot();
   }
 
   void _handleEvent(AnalysisResult result) {
-    final List<AnalysisResult> updatedHistory = List<AnalysisResult>.from(state.history);
+    final List<AnalysisResult> updatedHistory =
+        List<AnalysisResult>.from(state.history);
     if (result.confidence >= _confidenceThreshold) {
       updatedHistory.add(result);
       if (updatedHistory.length > historyWindow) {
@@ -38,6 +46,7 @@ class AnalysisSnapshotNotifier extends AutoDisposeNotifier<AnalysisSnapshot> {
   }
 }
 
-final analysisSnapshotProvider = AutoDisposeNotifierProvider<AnalysisSnapshotNotifier, AnalysisSnapshot>(
+final analysisSnapshotProvider =
+    AutoDisposeNotifierProvider<AnalysisSnapshotNotifier, AnalysisSnapshot>(
   AnalysisSnapshotNotifier.new,
 );
