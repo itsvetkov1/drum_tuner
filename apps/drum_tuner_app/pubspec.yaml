@@ -14,6 +14,8 @@ dependencies:
   drum_tuning_plugin:
     path: ../../packages/drum_tuning_plugin
   record: ^6.1.1
+  flutter_web_plugins:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
