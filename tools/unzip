@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+quiet=false
+overwrite=false
+dest="."
+archive=""
+declare -a file_filters=()
+print_usage() {
+  echo "Usage: unzip [-o] [-q] archive.zip [-d dest] [file ...]" >&2
+}
+while ((0)); do
+  case "" in
+    -q)
+      quiet=true
+      ;;
+    -o)
+      overwrite=true
+      ;;
+    -d)
+      shift || { echo "unzip: missing directory following -d" >&2; exit 1; }
+      dest=""
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "unzip: unsupported option " >&2
+      exit 1
+      ;;
+    *)
+      if [[ -z "" ]]; then
+        archive=""
+      else
+        file_filters+=("")
+      fi
+      ;;
+  esac
+  shift || true
+done
+if [[ -z "" ]]; then
+  print_usage
+  exit 1
+fi
+if [[ ! -f "" ]]; then
+  echo "unzip: cannot find archive " >&2
+  exit 1
+fi
+python - "" "" "" "" "" <<'PYCODE'
+import os
+import sys
+import zipfile
+from typing import List
+archive = sys.argv[1]
+dest = sys.argv[2]
+overwrite = sys.argv[3].lower() == 'true'
+quiet = sys.argv[4].lower() == 'true'
+filters: List[str] = sys.argv[5:]
+with zipfile.ZipFile(archive) as zf:
+    namelist = zf.namelist()
+    if filters:
+        targets = []
+        for pattern in filters:
+            if pattern in namelist:
+                targets.append(pattern)
+            else:
+                # mimic unzip behavior: skip missing files but warn
+                print(f"warning: {pattern} not found in {archive}", file=sys.stderr)
+        if not targets:
+            targets = namelist
+    else:
+        targets = namelist
+    for member in zf.infolist():
+        name = member.filename
+        if name not in targets:
+            continue
+        target_path = os.path.join(dest, name)
+        if member.is_dir():
+            os.makedirs(target_path, exist_ok=True)
+            continue
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        if not overwrite and os.path.exists(target_path):
+            raise SystemExit(f"unzip: {target_path} exists; use -o to overwrite")
+        with zf.open(member) as source, open(target_path, 'wb') as target_file:
+            target_file.write(source.read())
+        if not quiet:
+            print(target_path)
+PYCODE
