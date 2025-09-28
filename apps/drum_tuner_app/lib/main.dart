@@ -1,21 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
 import 'app/app.dart';
 import 'bootstrap.dart';
-import 'generated_plugin_registrant.dart';
 import 'mic_service.dart';
 
 Future<void> main() async {
   await bootstrap();
-  if (kIsWeb) {
-    registerPlugins(webPluginRegistrar);
-  }
   runApp(ProviderScope(child: DrumTunerApp(onGenerateRoute: _onGenerateRoute)));
 }
 
